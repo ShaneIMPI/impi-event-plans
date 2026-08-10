@@ -10,6 +10,7 @@ import {
   AlignmentType,
   ShadingType,
   PageOrientation,
+  BorderStyle,
 } from "docx";
 import {
   buildCoverPage,
@@ -31,6 +32,7 @@ import { hazardsForEventType } from "../data/hazardLibrary.js";
 import { CLASSIFICATION_CATEGORIES, computeRiskClassification, bandFromTotal } from "../data/riskClassification.js";
 
 const A4_PORTRAIT = { width: 11906, height: 16838 };
+const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 
 function tinyRun(text, opts = {}) {
   return new TextRun({ text: text ?? "", size: opts.size || 15, color: opts.color || DARK, font: "Calibri", bold: !!opts.bold });
@@ -104,29 +106,56 @@ function buildHazardTable(rows) {
   });
 }
 
-function buildClassificationTable(category, classResult) {
-  const rows = [
-    new TableRow({
-        cantSplit: true,
-      tableHeader: true,
+function buildClassificationTable(category, classResult, startNumber) {
+  const colWidths = [500, 6300, 1000, 1000, 1000];
+  const header = new TableRow({
+    cantSplit: true,
+    tableHeader: true,
+    children: [
+      tinyCell("No", { width: colWidths[0], shading: RED, color: "FFFFFF", bold: true, align: AlignmentType.CENTER }),
+      tinyCell("Category", { width: colWidths[1], shading: RED, color: "FFFFFF", bold: true }),
+      tinyCell("LOW", { width: colWidths[2], shading: "8BC34A", color: "FFFFFF", bold: true, align: AlignmentType.CENTER }),
+      tinyCell("MEDIUM", { width: colWidths[3], shading: "FDDB07", color: DARK, bold: true, align: AlignmentType.CENTER }),
+      tinyCell("HIGH", { width: colWidths[4], shading: "F4A11D", color: "FFFFFF", bold: true, align: AlignmentType.CENTER }),
+    ],
+  });
+  const dataRows = category.items.map((item, idx) => {
+    const scoreVal = classResult.raw?.[idx] ?? 0;
+    const mark = (col) => (scoreVal === col ? "X" : "");
+    return new TableRow({
+      cantSplit: true,
       children: [
-        tinyCell(category.title, { width: 8000, shading: RED, color: "FFFFFF", bold: true }),
-        tinyCell("Rating", { width: 1800, shading: RED, color: "FFFFFF", bold: true, align: AlignmentType.CENTER }),
+        tinyCell(String(startNumber + idx), { width: colWidths[0], align: AlignmentType.CENTER }),
+        tinyCell(item, { width: colWidths[1] }),
+        tinyCell(mark(1), { width: colWidths[2], shading: "D9EAD3", align: AlignmentType.CENTER, bold: true }),
+        tinyCell(mark(2), { width: colWidths[3], shading: "FFF2CC", align: AlignmentType.CENTER, bold: true }),
+        tinyCell(mark(3), { width: colWidths[4], shading: "FCE0C4", align: AlignmentType.CENTER, bold: true }),
       ],
-    }),
-    ...category.items.map((item, idx) => {
-      const scoreVal = classResult.raw?.[idx] ?? 0;
-      const label = ["N/A", "Low", "Medium", "High"][scoreVal] || "N/A";
-      return new TableRow({
-        cantSplit: true,
-        children: [
-          tinyCell(item, { width: 8000 }),
-          tinyCell(label, { width: 1800, align: AlignmentType.CENTER, bold: scoreVal > 0 }),
-        ],
-      });
-    }),
-  ];
-  return new Table({ width: { size: 9800, type: WidthType.DXA }, columnWidths: [8000, 1800], rows });
+    });
+  });
+  return new Table({
+    width: { size: colWidths.reduce((a, b) => a + b, 0), type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [header, ...dataRows],
+  });
+}
+
+function classificationSubheading(text) {
+  return new Paragraph({
+    spacing: { before: 200, after: 80 },
+    keepNext: true,
+    children: [new TextRun({ text, bold: true, color: RED, font: "Calibri", size: 22 })],
+  });
+}
+
+function averageOfRiskLine(average) {
+  return new Paragraph({
+    spacing: { before: 60, after: 0 },
+    children: [
+      new TextRun({ text: "Average of Risk Rating: ", bold: true, color: DARK, font: "Calibri", size: 20 }),
+      new TextRun({ text: average.toFixed(1), color: DARK, font: "Calibri", size: 20 }),
+    ],
+  });
 }
 
 export async function buildEventRiskAssessment(event, images) {
@@ -212,50 +241,85 @@ export async function buildEventRiskAssessment(event, images) {
   ];
 
   const classificationTables = [];
+  let itemCounter = 1;
   CLASSIFICATION_CATEGORIES.forEach((cat, i) => {
     const cr = classification.categoryResults[i];
-    classificationTables.push(heading2(`${cat.title}  (category total: ${cr.total})`));
-    classificationTables.push(buildClassificationTable(cat, cr));
-    classificationTables.push(new Paragraph({ text: "", spacing: { after: 160 } }));
+    classificationTables.push(classificationSubheading(cat.title));
+    classificationTables.push(buildClassificationTable(cat, cr, itemCounter));
+    classificationTables.push(averageOfRiskLine(cr.average));
+    classificationTables.push(new Paragraph({ text: "", spacing: { after: 200 } }));
+    itemCounter += cat.items.length;
   });
 
   const band = classification.band;
+  const catTotals = classification.categoryResults.map((c) => c.total);
+  const bandDefs = [
+    { range: "1–25", label: "LOW", sub: "(Safety Officer)", color: "8BC34A", textColor: "FFFFFF" },
+    { range: "26–50", label: "LOW", sub: "(Event Safety Committee)", color: "8BC34A", textColor: "FFFFFF" },
+    { range: "51–75", label: "MEDIUM", sub: "(Fully Representative VOC)", color: "FDDB07", textColor: DARK },
+    { range: "76+", label: "HIGH", sub: "(Risk Reduction Efforts)", color: "F4A11D", textColor: "FFFFFF" },
+  ];
+  const activeBandIndex = classification.total <= 25 ? 0 : classification.total <= 50 ? 1 : classification.total <= 75 ? 2 : 3;
+  const emphasisBorder = { style: BorderStyle.SINGLE, size: 36, color: DARK };
+
   const totalBandBlock = [
     new Paragraph({
-      spacing: { before: 120, after: 60 },
-      children: [tinyRun(`TOTAL RISK RATING: ${classification.total}`, { size: 26, bold: true, color: DARK })],
+      spacing: { before: 120, after: 120 },
+      children: [
+        tinyRun(`TOTAL RISK RATING: ${catTotals.join(" + ")} = ${classification.total}`, { size: 26, bold: true, color: DARK }),
+      ],
     }),
     new Table({
       width: { size: 9800, type: WidthType.DXA },
-      columnWidths: [9800],
+      columnWidths: [2450, 2450, 2450, 2450],
       rows: [
         new TableRow({
-        cantSplit: true,
-          children: [
-            new TableCell({
-              width: { size: 9800, type: WidthType.DXA },
-              shading: { type: ShadingType.CLEAR, fill: band.color },
-              margins: { top: 120, bottom: 120, left: 160, right: 160 },
-              children: [
-                new Paragraph({
-                  alignment: AlignmentType.CENTER,
-                  children: [
-                    new TextRun({
-                      text: `This event is classified by IMPI: RMS as a ${band.label} EVENT (${band.sub})`,
-                      bold: true,
-                      size: 24,
-                      color: band.label === "MEDIUM RISK" ? DARK : "FFFFFF",
-                      font: "Calibri",
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
+          cantSplit: true,
+          children: bandDefs.map(
+            (b, i) =>
+              new TableCell({
+                width: { size: 2450, type: WidthType.DXA },
+                shading: { type: ShadingType.CLEAR, fill: b.color },
+                margins: { top: 100, bottom: 40, left: 80, right: 80 },
+                borders: i === activeBandIndex ? { top: emphasisBorder, bottom: noBorder, left: emphasisBorder, right: emphasisBorder } : undefined,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: b.range, bold: true, size: 20, color: b.textColor, font: "Calibri" })],
+                  }),
+                ],
+              })
+          ),
+        }),
+        new TableRow({
+          cantSplit: true,
+          children: bandDefs.map(
+            (b, i) =>
+              new TableCell({
+                width: { size: 2450, type: WidthType.DXA },
+                shading: { type: ShadingType.CLEAR, fill: b.color },
+                margins: { top: 40, bottom: 100, left: 80, right: 80 },
+                borders: i === activeBandIndex ? { top: noBorder, bottom: emphasisBorder, left: emphasisBorder, right: emphasisBorder } : undefined,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: b.label, bold: true, size: 20, color: b.textColor, font: "Calibri" })],
+                  }),
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: b.sub, bold: true, size: 15, color: b.textColor, font: "Calibri" })],
+                  }),
+                ],
+              })
+          ),
         }),
       ],
     }),
-    new Paragraph({ text: "", spacing: { after: 200 } }),
+    new Paragraph({ spacing: { before: 160, after: 200 }, children: [
+      new TextRun({ text: `This event's Total Risk Rating (${classification.total}) falls within the band highlighted above, and is hereby classified by IMPI: RMS as a `, bold: true, color: DARK, font: "Calibri", size: 22 }),
+      new TextRun({ text: `${band.label} ${band.sub}`, bold: true, color: RED, font: "Calibri", size: 22 }),
+      new TextRun({ text: " RISK EVENT.", bold: true, color: DARK, font: "Calibri", size: 22 }),
+    ] }),
   ];
 
   const riskFrameworkSection = [
