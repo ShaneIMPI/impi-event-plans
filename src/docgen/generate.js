@@ -16,17 +16,24 @@ function slugify(text) {
     .replace(/(^-|-$)/g, "");
 }
 
+// Resolves a public-asset path against the deployed site's base URL, so it
+// works whether served at the domain root (local dev) or under a subpath
+// like /impi-event-plans/ (GitHub Pages project sites).
+function assetPath(path) {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+}
+
 export async function generateSelectedDocuments(event, toggledModules) {
   const masterLogo = await loadImageBuffer(IMPI.masterLogoPath);
   const eventLogo = event.eventLogo instanceof Blob ? await loadImageBuffer(event.eventLogo) : null;
 
   // Reference signage / diagrams, sourced from IMPI's own compiled plans.
   const signage = {
-    incidentFlowchart: await loadImageBuffer("/assets/signage/incident-escalation-flowchart.png"),
-    fireExtinguisherUsage: await loadImageBuffer("/assets/signage/fire-extinguisher-usage.png"),
-    evacuationFlowchart: await loadImageBuffer("/assets/signage/evacuation-flowchart.png"),
-    exitSign: await loadImageBuffer("/assets/signage/exit-sign.png"),
-    assemblyPointSign: await loadImageBuffer("/assets/signage/assembly-point-sign.png"),
+    incidentFlowchart: await loadImageBuffer(assetPath("assets/signage/incident-escalation-flowchart.png")),
+    fireExtinguisherUsage: await loadImageBuffer(assetPath("assets/signage/fire-extinguisher-usage.png")),
+    evacuationFlowchart: await loadImageBuffer(assetPath("assets/signage/evacuation-flowchart.png")),
+    exitSign: await loadImageBuffer(assetPath("assets/signage/exit-sign.png")),
+    assemblyPointSign: await loadImageBuffer(assetPath("assets/signage/assembly-point-sign.png")),
   };
 
   const images = { masterLogo, eventLogo, signage };

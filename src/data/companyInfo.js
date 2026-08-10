@@ -22,7 +22,8 @@ export const IMPI = {
     goldBright: "#FDDB07",
     dark: "#231F20",
   },
-  // Path relative to /public — official IMPI tri-circle master logo
-  // (installed August 2026).
-  masterLogoPath: "/assets/impi-master-logo.png",
+  // Path relative to the deployed site root — computed from Vite's BASE_URL
+  // so it resolves correctly whether the app is served at the domain root
+  // (local dev) or under a subpath like /impi-event-plans/ (GitHub Pages).
+  masterLogoPath: `${import.meta.env.BASE_URL}assets/impi-master-logo.png`,
 };
