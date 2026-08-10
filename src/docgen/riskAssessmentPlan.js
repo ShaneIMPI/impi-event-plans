@@ -148,12 +148,12 @@ function classificationSubheading(text) {
   });
 }
 
-function averageOfRiskLine(average) {
+function totalRiskPointsLine(total) {
   return new Paragraph({
     spacing: { before: 60, after: 0 },
     children: [
-      new TextRun({ text: "Average of Risk Rating: ", bold: true, color: DARK, font: "Calibri", size: 20 }),
-      new TextRun({ text: average.toFixed(1), color: DARK, font: "Calibri", size: 20 }),
+      new TextRun({ text: "Total Risk Points: ", bold: true, color: DARK, font: "Calibri", size: 20 }),
+      new TextRun({ text: String(total), color: DARK, font: "Calibri", size: 20 }),
     ],
   });
 }
@@ -246,7 +246,7 @@ export async function buildEventRiskAssessment(event, images) {
     const cr = classification.categoryResults[i];
     classificationTables.push(classificationSubheading(cat.title));
     classificationTables.push(buildClassificationTable(cat, cr, itemCounter));
-    classificationTables.push(averageOfRiskLine(cr.average));
+    classificationTables.push(totalRiskPointsLine(cr.total));
     classificationTables.push(new Paragraph({ text: "", spacing: { after: 200 } }));
     itemCounter += cat.items.length;
   });

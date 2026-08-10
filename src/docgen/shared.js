@@ -298,7 +298,7 @@ export function buildFooter(event = {}, brand = IMPI) {
         spacing: { before: 100, after: 0 },
         children: [
           new TextRun({
-            text: `${brand.legalName} t/a ${brand.tradingAs}  |  ${brand.address}  |  ${brand.phone}  |  ${brand.email}  |  PSIRA Registration ${brand.psiraNo}`,
+            text: `${brand.legalName}  |  ${brand.address}  |  ${brand.phone}  |  ${brand.email}  |  PSIRA Registration ${brand.psiraNo}`,
             size: 15,
             color: DARK,
             font: "Calibri",
