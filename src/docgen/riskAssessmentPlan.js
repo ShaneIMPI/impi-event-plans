@@ -16,6 +16,8 @@ import {
   buildDocumentControlTable,
   buildFooter,
   buildHeader,
+  emptyHeader,
+  emptyFooter,
   heading1,
   heading2,
   paragraph,
@@ -310,9 +312,9 @@ export async function buildEventRiskAssessment(event, images) {
   return new Document({
     sections: [
       {
-        properties: { page: { size: A4_PORTRAIT } },
-        headers: { default: buildHeader("EVENT RISK ASSESSMENT") },
-        footers: { default: buildFooter() },
+        properties: { page: { size: A4_PORTRAIT }, titlePage: true },
+        headers: { default: buildHeader("EVENT RISK ASSESSMENT", "(SASREA Compliant)", images.masterLogo), first: emptyHeader() },
+        footers: { default: buildFooter(event), first: emptyFooter() },
         children: [...cover, ...portrait1, ...classificationTables, ...totalBandBlock, ...riskFrameworkSection],
       },
       {
@@ -322,14 +324,14 @@ export async function buildEventRiskAssessment(event, images) {
             margin: { top: 900, bottom: 900, left: 720, right: 720 },
           },
         },
-        headers: { default: buildHeader("EVENT RISK ASSESSMENT") },
-        footers: { default: buildFooter() },
+        headers: { default: buildHeader("EVENT RISK ASSESSMENT", "(SASREA Compliant)", images.masterLogo) },
+        footers: { default: buildFooter(event) },
         children: hazardSectionChildren,
       },
       {
         properties: { page: { size: A4_PORTRAIT } },
-        headers: { default: buildHeader("EVENT RISK ASSESSMENT") },
-        footers: { default: buildFooter() },
+        headers: { default: buildHeader("EVENT RISK ASSESSMENT", "(SASREA Compliant)", images.masterLogo) },
+        footers: { default: buildFooter(event) },
         children: closingSection,
       },
     ],

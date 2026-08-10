@@ -4,6 +4,8 @@ import {
   buildDocumentControlTable,
   buildFooter,
   buildHeader,
+  emptyHeader,
+  emptyFooter,
   heading1,
   heading2,
   paragraph,
@@ -131,9 +133,9 @@ export async function buildEmergencyEvacuationPlan(event, images) {
   return new Document({
     sections: [
       {
-        properties: {},
-        headers: { default: buildHeader("EMERGENCY EVACUATION PLAN") },
-        footers: { default: buildFooter() },
+        properties: { titlePage: true },
+        headers: { default: buildHeader("EMERGENCY EVACUATION PLAN", "(SASREA & OHS Act Compliant)", images.masterLogo), first: emptyHeader() },
+        footers: { default: buildFooter(event), first: emptyFooter() },
         children: [...cover, ...body],
       },
     ],

@@ -20,7 +20,7 @@ function slugify(text) {
 // works whether served at the domain root (local dev) or under a subpath
 // like /impi-event-plans/ (GitHub Pages project sites).
 function assetPath(path) {
-  return `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
+  return `${import.meta.env?.BASE_URL || "/"}${path.replace(/^\//, "")}`;
 }
 
 export async function generateSelectedDocuments(event, toggledModules) {

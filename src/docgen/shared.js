@@ -13,6 +13,7 @@ import {
   PageNumber,
   ImageRun,
   ShadingType,
+  VerticalAlign,
 } from "docx";
 import { IMPI } from "../data/companyInfo.js";
 
@@ -20,6 +21,7 @@ import { IMPI } from "../data/companyInfo.js";
 export const RED = "DE1819";
 export const GOLD = "B8942E";
 export const DARK = "231F20";
+export const GREY = "595959";
 export const LIGHT_GREY = "F2F2F2";
 
 const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
@@ -52,107 +54,83 @@ export function bodyRun(text, opts = {}) {
   return new TextRun({ text, size: opts.size || 22, color: opts.color || DARK, font: "Calibri", bold: !!opts.bold });
 }
 
-// ---- Cover page: master logo (left) + event logo (right), title block ----
-// Modern corporate layout: large logos, bold full-colour title band, dark/gold
-// detail block instead of a plain grey box.
+// ---- Cover page: centred master logo, centred title/subtitle, red rule,
+// plain document-detail table. Matches the approved IMPI master templates. ----
 export async function buildCoverPage({ docTitle, subTitle, eventLogoBuffer, masterLogoBuffer, event, extraDetailRows = [] }) {
   const children = [];
 
-  // Logo row — larger, generous whitespace, master logo left / event logo right
-  const logoCells = [];
-  logoCells.push(
-    new TableCell({
-      width: { size: 55, type: WidthType.PERCENTAGE },
-      borders: NO_BORDERS,
-      verticalAlign: "center",
-      children: [
-        masterLogoBuffer
-          ? new Paragraph({
-              children: [new ImageRun({ data: masterLogoBuffer, transformation: { width: 300, height: 152 } })],
-            })
-          : new Paragraph({ children: [bodyRun("IMPI RMS (Pty) Ltd", { bold: true, size: 28 })] }),
-      ],
-    })
-  );
-  logoCells.push(
-    new TableCell({
-      width: { size: 45, type: WidthType.PERCENTAGE },
-      borders: NO_BORDERS,
-      verticalAlign: "center",
-      children: [
-        new Paragraph({
-          alignment: AlignmentType.RIGHT,
-          children: [
-            eventLogoBuffer
-              ? new ImageRun({ data: eventLogoBuffer, transformation: { width: 210, height: 130 } })
-              : bodyRun(""),
-          ],
-        }),
-      ],
-    })
-  );
-  children.push(
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: NO_BORDERS,
-      rows: [new TableRow({ children: logoCells })],
-    })
-  );
-
-  children.push(new Paragraph({ text: "", spacing: { after: 400 } }));
-
-  // Title band — solid red fill, white bold title, gold subtitle. Modern
-  // corporate cover treatment instead of a plain grey strip.
-  children.push(
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: NO_BORDERS,
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              shading: { type: ShadingType.CLEAR, fill: RED },
-              borders: NO_BORDERS,
-              margins: { top: 260, bottom: 260, left: 280, right: 280 },
-              children: [
-                new Paragraph({
-                  children: [new TextRun({ text: docTitle, bold: true, size: 40, color: "FFFFFF", font: "Calibri" })],
-                }),
-                subTitle
-                  ? new Paragraph({
-                      spacing: { before: 60 },
-                      children: [new TextRun({ text: subTitle, bold: true, size: 22, color: "FDDB07", font: "Calibri" })],
-                    })
-                  : new Paragraph({ text: "" }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    })
-  );
-
-  children.push(new Paragraph({ text: "", spacing: { after: 260 } }));
+  // Logo — centred, generous size
   children.push(
     new Paragraph({
-      heading: HeadingLevel.TITLE,
-      children: [titleRun(event.eventName || "Event Name", { size: 44 })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 320 },
+      children: [
+        masterLogoBuffer
+          ? new ImageRun({ data: masterLogoBuffer, transformation: { width: 400, height: 203 } })
+          : new TextRun({ text: "IMPI RMS (Pty) Ltd", bold: true, size: 28, color: DARK, font: "Calibri" }),
+      ],
     })
   );
-  children.push(new Paragraph({ spacing: { after: 260 }, children: [bodyRun(event.venueAddress || event.venue || "", { size: 22 })] }));
 
-  // Detail block — dark label column with gold text, clean corporate table
+  // Event logo, if supplied — centred, smaller, beneath the master logo
+  if (eventLogoBuffer) {
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 320 },
+        children: [new ImageRun({ data: eventLogoBuffer, transformation: { width: 220, height: 136 } })],
+      })
+    );
+  }
+
+  // Document title — centred, bold black
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 60 },
+      children: [new TextRun({ text: docTitle, bold: true, size: 32, color: DARK, font: "Calibri" })],
+    })
+  );
+  if (subTitle) {
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 160 },
+        children: [new TextRun({ text: subTitle, bold: true, size: 22, color: GREY, font: "Calibri" })],
+      })
+    );
+  }
+
+  // Event name / venue — centred
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 40 },
+      children: [new TextRun({ text: event.eventName || "Event Name", bold: true, size: 30, color: DARK, font: "Calibri" })],
+    })
+  );
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 160 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: RED, space: 8 } },
+      children: [new TextRun({ text: event.venueAddress || event.venue || "", size: 22, color: GREY, font: "Calibri" })],
+    })
+  );
+  children.push(new Paragraph({ text: "", spacing: { after: 260 } }));
+
+  // Plain detail table — bold black label, plain value, no shading
   const detailRows = [
-    ["Event Date", event.eventDate],
-    ["Operating Times", event.operatingTimes],
-    ["Expected Attendance", `${event.expectedAttendance || ""} PAX`],
-    ["Risk Category", event.riskCategory],
-    ["Municipality", event.municipality],
+    ["Event Date:", event.eventDate],
+    ["Operating Times:", event.operatingTimes],
+    ["Expected Attendance:", `${event.expectedAttendance || ""} PAX`],
+    ["Risk Category:", event.riskCategory],
+    ["Municipality:", event.municipality],
     ...extraDetailRows,
-    ["Prepared By", "IMPI Risk Management Services"],
-    ["Event Safety Officer", event.eventSafetyOfficer],
-    ["Date Prepared", event.datePrepared],
-    ["Version", "1.0"],
+    ["Prepared By:", "IMPI Risk Management Services"],
+    ["Event Safety Officer:", event.eventSafetyOfficer],
+    ["Date Prepared:", event.datePrepared],
+    ["Version:", "1.0"],
   ];
   children.push(
     new Table({
@@ -164,16 +142,15 @@ export async function buildCoverPage({ docTitle, subTitle, eventLogoBuffer, mast
             children: [
               new TableCell({
                 width: { size: 32, type: WidthType.PERCENTAGE },
-                shading: { type: ShadingType.CLEAR, fill: DARK },
-                margins: { top: 80, bottom: 80, left: 160, right: 120 },
+                margins: { top: 60, bottom: 60, left: 0, right: 120 },
                 borders: NO_BORDERS,
-                children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 20, color: "FDDB07", font: "Calibri" })] })],
+                children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 22, color: DARK, font: "Calibri" })] })],
               }),
               new TableCell({
                 width: { size: 68, type: WidthType.PERCENTAGE },
-                margins: { top: 80, bottom: 80, left: 160, right: 120 },
+                margins: { top: 60, bottom: 60, left: 0, right: 0 },
                 borders: NO_BORDERS,
-                children: [new Paragraph({ children: [bodyRun(value || "", { size: 22 })] })],
+                children: [new Paragraph({ children: [bodyRun(value || "", { size: 22, color: GREY })] })],
               }),
             ],
           })
@@ -185,6 +162,7 @@ export async function buildCoverPage({ docTitle, subTitle, eventLogoBuffer, mast
 }
 
 // ---- Document Control table (identical shape across all IMPI plan docs) ----
+// Plain white table, bold black labels, plain values — no shading.
 export function buildDocumentControlTable(event, extraRows = []) {
   const rows = [
     ["Event Name:", event.eventName],
@@ -202,20 +180,22 @@ export function buildDocumentControlTable(event, extraRows = []) {
 
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: NO_BORDERS,
     rows: rows.map(
       ([label, value]) =>
         new TableRow({
           children: [
             new TableCell({
               width: { size: 30, type: WidthType.PERCENTAGE },
-              shading: { type: ShadingType.CLEAR, fill: DARK },
-              margins: { top: 80, bottom: 80, left: 140, right: 100 },
-              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 20, color: "FDDB07", font: "Calibri" })] })],
+              margins: { top: 60, bottom: 60, left: 0, right: 100 },
+              borders: NO_BORDERS,
+              children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 22, color: DARK, font: "Calibri" })] })],
             }),
             new TableCell({
               width: { size: 70, type: WidthType.PERCENTAGE },
-              margins: { top: 80, bottom: 80, left: 140, right: 100 },
-              children: [new Paragraph({ children: [bodyRun(value || "")] })],
+              margins: { top: 60, bottom: 60, left: 0, right: 0 },
+              borders: NO_BORDERS,
+              children: [new Paragraph({ children: [bodyRun(value || "", { color: GREY })] })],
             }),
           ],
         })
@@ -223,21 +203,24 @@ export function buildDocumentControlTable(event, extraRows = []) {
   });
 }
 
+// ---- Section heading: bold black text with a full-width red underline rule ----
 export function heading1(text) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_1,
-    spacing: { before: 360, after: 160 },
-    border: { left: { style: BorderStyle.SINGLE, size: 24, color: RED, space: 8 } },
-    indent: { left: 20 },
+    spacing: { before: 360, after: 40 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: RED, space: 6 } },
     children: [new TextRun({ text: text.toUpperCase(), bold: true, color: DARK, font: "Calibri", size: 26 })],
   });
 }
 
+// ---- Subheading: bold black text with a short, thin gold accent bar to the left ----
 export function heading2(text) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
     spacing: { before: 220, after: 100 },
-    children: [new TextRun({ text, bold: true, color: GOLD, font: "Calibri", size: 23 })],
+    border: { left: { style: BorderStyle.SINGLE, size: 16, color: GOLD, space: 6 } },
+    indent: { left: 10 },
+    children: [new TextRun({ text, bold: true, color: DARK, font: "Calibri", size: 22 })],
   });
 }
 
@@ -249,26 +232,70 @@ export function bullet(text) {
   return new Paragraph({ bullet: { level: 0 }, spacing: { after: 60 }, children: [bodyRun(text)] });
 }
 
-// ---- Footer: IMPI contact block on every page ----
-export function buildFooter(brand = IMPI) {
+// ---- Footer: Event/Venue | Municipality/Risk | Page X of Y, then company
+// contact line, then italic confidentiality notice. Matches the master. ----
+export function buildFooter(event = {}, brand = IMPI) {
+  const cellStyle = { size: 22, color: GREY, font: "Calibri" };
+
+  const infoRow = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: NO_BORDERS,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            width: { size: 40, type: WidthType.PERCENTAGE },
+            borders: NO_BORDERS,
+            verticalAlign: VerticalAlign.TOP,
+            children: [
+              new Paragraph({ children: [new TextRun({ text: `Event: ${event.eventName || ""}`, ...cellStyle })] }),
+              new Paragraph({ children: [new TextRun({ text: `Venue: ${event.venue || event.venueAddress || ""}`, ...cellStyle })] }),
+            ],
+          }),
+          new TableCell({
+            width: { size: 35, type: WidthType.PERCENTAGE },
+            borders: NO_BORDERS,
+            verticalAlign: VerticalAlign.TOP,
+            children: [
+              new Paragraph({ children: [new TextRun({ text: `Municipality: ${event.municipality || ""}`, ...cellStyle })] }),
+              new Paragraph({ children: [new TextRun({ text: `Risk Category: ${event.riskCategory || ""}`, ...cellStyle })] }),
+            ],
+          }),
+          new TableCell({
+            width: { size: 25, type: WidthType.PERCENTAGE },
+            borders: NO_BORDERS,
+            verticalAlign: VerticalAlign.TOP,
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({ text: "Page ", ...cellStyle }),
+                  new TextRun({ children: [PageNumber.CURRENT], ...cellStyle }),
+                  new TextRun({ text: " of ", ...cellStyle }),
+                  new TextRun({ children: [PageNumber.TOTAL_PAGES], ...cellStyle }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+
   return new Footer({
     children: [
       new Paragraph({
-        border: {
-          top: { style: BorderStyle.SINGLE, size: 4, color: RED, space: 4 },
-        },
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 80, after: 0 },
-        children: [
-          new TextRun({ text: "HONESTY, INTEGRITY, LOYALTY", size: 14, color: GOLD, bold: true, font: "Calibri", italics: true }),
-        ],
+        border: { top: { style: BorderStyle.SINGLE, size: 6, color: RED, space: 4 } },
+        spacing: { before: 100, after: 0 },
+        children: [],
       }),
+      infoRow,
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 0 },
+        spacing: { before: 100, after: 0 },
         children: [
           new TextRun({
-            text: `${brand.legalName} t/a ${brand.tradingAs}  |  ${brand.address}  |  ${brand.phone}  |  ${brand.email}  |  ${brand.website}  |  PSIRA No: ${brand.psiraNo}`,
+            text: `${brand.legalName} t/a ${brand.tradingAs}  |  ${brand.address}  |  ${brand.phone}  |  ${brand.email}  |  PSIRA Registration ${brand.psiraNo}`,
             size: 15,
             color: DARK,
             font: "Calibri",
@@ -277,23 +304,68 @@ export function buildFooter(brand = IMPI) {
       }),
       new Paragraph({
         alignment: AlignmentType.CENTER,
+        spacing: { before: 40 },
         children: [
-          new TextRun({ children: ["Page ", PageNumber.CURRENT, " of ", PageNumber.TOTAL_PAGES], size: 15, color: DARK, font: "Calibri" }),
+          new TextRun({
+            text: "This document is confidential and prepared exclusively for the named event and JOC/ESSPC submission. Unauthorised distribution is prohibited.",
+            size: 14,
+            italics: true,
+            color: GREY,
+            font: "Calibri",
+          }),
         ],
       }),
     ],
   });
 }
 
-export function buildHeader(docLabel) {
+// ---- Header: small logo left, bold black document title right (wraps) ----
+export function buildHeader(docTitle, subTitle, masterLogoBuffer) {
+  const titleRuns = [new TextRun({ text: docTitle, bold: true, size: 24, color: DARK, font: "Calibri" })];
+  if (subTitle) {
+    titleRuns.push(new TextRun({ text: ` ${subTitle}`, bold: true, size: 24, color: DARK, font: "Calibri", break: 0 }));
+  }
+
   return new Header({
     children: [
-      new Paragraph({
-        alignment: AlignmentType.RIGHT,
-        children: [new TextRun({ text: docLabel, size: 16, color: GOLD, font: "Calibri", bold: true })],
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: NO_BORDERS,
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 35, type: WidthType.PERCENTAGE },
+                borders: NO_BORDERS,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    children: masterLogoBuffer
+                      ? [new ImageRun({ data: masterLogoBuffer, transformation: { width: 140, height: 71 } })]
+                      : [new TextRun({ text: "IMPI RMS (Pty) Ltd", bold: true, size: 18, color: DARK, font: "Calibri" })],
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 65, type: WidthType.PERCENTAGE },
+                borders: NO_BORDERS,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: titleRuns })],
+              }),
+            ],
+          }),
+        ],
       }),
     ],
   });
+}
+
+// ---- Blank header/footer for the cover/title page (docx titlePage mode) ----
+export function emptyHeader() {
+  return new Header({ children: [] });
+}
+export function emptyFooter() {
+  return new Footer({ children: [] });
 }
 
 export function complianceDeclaration(text, signOffLines) {

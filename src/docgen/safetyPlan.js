@@ -4,6 +4,8 @@ import {
   buildDocumentControlTable,
   buildFooter,
   buildHeader,
+  emptyHeader,
+  emptyFooter,
   heading1,
   heading2,
   paragraph,
@@ -161,9 +163,9 @@ export async function buildSafetyManagementPlan(event, images) {
   return new Document({
     sections: [
       {
-        properties: {},
-        headers: { default: buildHeader("SAFETY MANAGEMENT PLAN") },
-        footers: { default: buildFooter() },
+        properties: { titlePage: true },
+        headers: { default: buildHeader("SAFETY MANAGEMENT PLAN", "(SASREA & OHS Act Compliant)", images.masterLogo), first: emptyHeader() },
+        footers: { default: buildFooter(event), first: emptyFooter() },
         children: [...cover, ...body],
       },
     ],
