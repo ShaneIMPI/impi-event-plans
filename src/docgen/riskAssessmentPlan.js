@@ -62,6 +62,7 @@ function riskShade(r) {
 
 function buildHazardTable(rows) {
   const header = new TableRow({
+        cantSplit: true,
     tableHeader: true,
     children: [
       tinyCell("Hazard", { width: HAZARD_COL_WIDTHS[0], shading: DARK, color: "FDDB07", bold: true }),
@@ -80,6 +81,7 @@ function buildHazardTable(rows) {
   const dataRows = rows.map(
     (row) =>
       new TableRow({
+        cantSplit: true,
         children: [
           tinyCell(row.hazard, { width: HAZARD_COL_WIDTHS[0], bold: true }),
           tinyCell(row.cause, { width: HAZARD_COL_WIDTHS[1] }),
@@ -105,6 +107,7 @@ function buildHazardTable(rows) {
 function buildClassificationTable(category, classResult) {
   const rows = [
     new TableRow({
+        cantSplit: true,
       tableHeader: true,
       children: [
         tinyCell(category.title, { width: 8000, shading: RED, color: "FFFFFF", bold: true }),
@@ -115,6 +118,7 @@ function buildClassificationTable(category, classResult) {
       const scoreVal = classResult.raw?.[idx] ?? 0;
       const label = ["N/A", "Low", "Medium", "High"][scoreVal] || "N/A";
       return new TableRow({
+        cantSplit: true,
         children: [
           tinyCell(item, { width: 8000 }),
           tinyCell(label, { width: 1800, align: AlignmentType.CENTER, bold: scoreVal > 0 }),
@@ -226,6 +230,7 @@ export async function buildEventRiskAssessment(event, images) {
       columnWidths: [9800],
       rows: [
         new TableRow({
+        cantSplit: true,
           children: [
             new TableCell({
               width: { size: 9800, type: WidthType.DXA },
@@ -314,7 +319,7 @@ export async function buildEventRiskAssessment(event, images) {
       {
         properties: { page: { size: A4_PORTRAIT }, titlePage: true },
         headers: { default: buildHeader("EVENT RISK ASSESSMENT", "(SASREA Compliant)", images.masterLogo), first: emptyHeader() },
-        footers: { default: buildFooter(event), first: emptyFooter() },
+        footers: { default: buildFooter(event), first: buildFooter(event) },
         children: [...cover, ...portrait1, ...classificationTables, ...totalBandBlock, ...riskFrameworkSection],
       },
       {
@@ -341,6 +346,7 @@ export async function buildEventRiskAssessment(event, images) {
 function buildAcknowledgementTable() {
   const colWidths = [3600, 3600, 2600];
   const header = new TableRow({
+        cantSplit: true,
     tableHeader: true,
     children: [
       tinyCell("Name", { width: colWidths[0], shading: RED, color: "FFFFFF", bold: true, align: AlignmentType.CENTER }),
@@ -351,6 +357,7 @@ function buildAcknowledgementTable() {
   const blankRows = Array.from({ length: 6 }).map(
     () =>
       new TableRow({
+        cantSplit: true,
         children: [
           tinyCell("", { width: colWidths[0] }),
           tinyCell("", { width: colWidths[1] }),

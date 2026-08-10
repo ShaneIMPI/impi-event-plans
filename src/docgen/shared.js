@@ -184,6 +184,7 @@ export function buildDocumentControlTable(event, extraRows = []) {
     rows: rows.map(
       ([label, value]) =>
         new TableRow({
+          cantSplit: true,
           children: [
             new TableCell({
               width: { size: 30, type: WidthType.PERCENTAGE },
@@ -207,7 +208,8 @@ export function buildDocumentControlTable(event, extraRows = []) {
 export function heading1(text) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_1,
-    spacing: { before: 360, after: 40 },
+    spacing: { before: 320, after: 40 },
+    keepNext: true,
     border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: RED, space: 6 } },
     children: [new TextRun({ text: text.toUpperCase(), bold: true, color: DARK, font: "Calibri", size: 26 })],
   });
@@ -217,7 +219,8 @@ export function heading1(text) {
 export function heading2(text) {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
-    spacing: { before: 220, after: 100 },
+    spacing: { before: 200, after: 100 },
+    keepNext: true,
     border: { left: { style: BorderStyle.SINGLE, size: 16, color: GOLD, space: 6 } },
     indent: { left: 10 },
     children: [new TextRun({ text, bold: true, color: DARK, font: "Calibri", size: 22 })],
