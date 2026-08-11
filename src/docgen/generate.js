@@ -7,6 +7,7 @@ import { buildParkingManagementPlan } from "./parkingPlan.js";
 import { buildEventRiskAssessment } from "./riskAssessmentPlan.js";
 import { buildTrafficManagementPlan } from "./trafficPlan.js";
 import { buildEmergencyEvacuationPlan } from "./evacuationPlan.js";
+import { buildSafetyOfficerAppointmentLetter } from "./appointmentLetter.js";
 import { IMPI } from "../data/companyInfo.js";
 
 function slugify(text) {
@@ -56,6 +57,9 @@ export async function generateSelectedDocuments(event, toggledModules) {
   }
   if (toggledModules.includes("evacuation")) {
     jobs.push({ name: "Emergency Evacuation Plan", build: () => buildEmergencyEvacuationPlan(event, images) });
+  }
+  if (toggledModules.includes("appointmentLetter")) {
+    jobs.push({ name: "Safety Officer Appointment Letter", build: () => buildSafetyOfficerAppointmentLetter(event, images) });
   }
 
   const slug = slugify(event.eventName);

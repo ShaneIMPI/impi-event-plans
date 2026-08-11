@@ -43,7 +43,7 @@ export const SHARED_OPERATIONAL_FIELDS = [
     id: "jocAuthority",
     label: "JOC / Municipal Authority Department",
     type: "text",
-    modules: ["safety", "security", "evacuation"],
+    modules: ["safety", "security", "evacuation", "appointmentLetter"],
     placeholder: "e.g. City of Tshwane – JOC Committee for Events",
   },
   {
@@ -66,6 +66,14 @@ export const EVACUATION_FIELDS = [
   { id: "specialNeedsProvisions", label: "Special Needs / Wheelchair Evacuation Provisions", type: "textarea", modules: ["evacuation"] },
   { id: "evacuationTriggers", label: "Evacuation Triggers (one per line)", type: "textarea", modules: ["evacuation"], placeholder: "e.g. Fire / smoke detected\nStructural instability\nBomb threat\nSAPS/Disaster Management instruction" },
   { id: "allClearAuthority", label: "Who May Declare All-Clear", type: "text", modules: ["evacuation"], default: "Event Safety Officer, in consultation with SAPS/Fire Services" },
+];
+
+export const APPOINTMENT_LETTER_FIELDS = [
+  { id: "safetyOfficerName", label: "Safety Officer — Full Name", type: "text", modules: ["appointmentLetter"], placeholder: "e.g. Annette Van Vuuren" },
+  { id: "safetyOfficerIdNumber", label: "Safety Officer — ID Number", type: "text", modules: ["appointmentLetter"] },
+  { id: "safetyOfficerPosition", label: "Safety Officer — Position / Grading", type: "text", modules: ["appointmentLetter"], default: "Safety Officer" },
+  { id: "safetyOfficerContact", label: "Safety Officer — Contact Number", type: "text", modules: ["appointmentLetter"] },
+  { id: "safetyOfficerEmail", label: "Safety Officer — Email Address", type: "text", modules: ["appointmentLetter"] },
 ];
 
 export const SAFETY_FIELDS = [
@@ -170,6 +178,7 @@ export function buildQuestionnaire(toggledModules) {
   if (toggledModules.includes("parking")) addIfRelevant(PARKING_FIELDS);
   if (toggledModules.includes("traffic")) addIfRelevant(TRAFFIC_FIELDS);
   if (toggledModules.includes("evacuation")) addIfRelevant(EVACUATION_FIELDS);
+  if (toggledModules.includes("appointmentLetter")) addIfRelevant(APPOINTMENT_LETTER_FIELDS);
   if (toggledModules.includes("riskAssessment")) addIfRelevant(RISK_ASSESSMENT_FIELDS);
 
   return fields;

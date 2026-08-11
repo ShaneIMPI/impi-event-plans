@@ -5,6 +5,7 @@ const AVAILABLE = [
   { id: "riskAssessment", label: "Event Risk Assessment" },
   { id: "traffic", label: "Traffic Management Plan" },
   { id: "evacuation", label: "Emergency Evacuation Plan" },
+  { id: "appointmentLetter", label: "Safety Officer Appointment Letter" },
 ];
 
 const COMING_SOON = [];
