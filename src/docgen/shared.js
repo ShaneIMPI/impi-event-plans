@@ -37,13 +37,30 @@ export const NO_BORDERS = {
 // Loads an image (File/Blob or fetch:able path) into an ArrayBuffer for docx ImageRun.
 export async function loadImageBuffer(source) {
   if (!source) return null;
-  if (source instanceof Blob) {
-    return new Uint8Array(await source.arrayBuffer());
+  try {
+    if (source instanceof Blob) {
+      return new Uint8Array(await source.arrayBuffer());
+    }
+    if (typeof source === "string" && source.startsWith("data:")) {
+      // Base64 data URL (e.g. a user-uploaded event logo, stored this way
+      // specifically so it can round-trip through IndexedDB safely — see
+      // FieldInput.jsx for why raw File objects are avoided here).
+      const base64 = source.slice(source.indexOf(",") + 1);
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+    // Treat as a URL/path (e.g. /assets/impi-master-logo.png served from /public)
+    const res = await fetch(source);
+    if (!res.ok) return null;
+    return new Uint8Array(await res.arrayBuffer());
+  } catch (err) {
+    // Never let a bad/unreadable image block the whole document from
+    // generating — fall back to no logo rather than throwing.
+    console.warn("loadImageBuffer: failed to load image, continuing without it", err);
+    return null;
   }
-  // Treat as a URL/path (e.g. /assets/impi-master-logo.png served from /public)
-  const res = await fetch(source);
-  if (!res.ok) return null;
-  return new Uint8Array(await res.arrayBuffer());
 }
 
 export function titleRun(text, opts = {}) {

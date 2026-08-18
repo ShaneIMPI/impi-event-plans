@@ -48,14 +48,25 @@ export default function FieldInput({ field, value, onChange }) {
   }
 
   if (field.type === "image") {
-    return (
-      <input
-        {...commonProps}
-        type="file"
-        accept="image/*"
-        onChange={(e) => onChange(field.id, e.target.files?.[0] || null)}
-      />
-    );
+    const handleFile = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) {
+        onChange(field.id, null);
+        return;
+      }
+      // Convert to a base64 data URL immediately, rather than storing the raw
+      // File object in state. Raw Files get auto-saved into IndexedDB with the
+      // draft, and browsers (Chrome in particular) can silently invalidate a
+      // File's readable handle once it's been through IndexedDB — causing a
+      // "NotReadableError" the next time the app tries to read its bytes.
+      // A plain base64 string has none of that risk and round-trips through
+      // IndexedDB perfectly.
+      const reader = new FileReader();
+      reader.onload = () => onChange(field.id, reader.result);
+      reader.onerror = () => onChange(field.id, null);
+      reader.readAsDataURL(file);
+    };
+    return <input {...commonProps} type="file" accept="image/*" onChange={handleFile} />;
   }
 
   return (

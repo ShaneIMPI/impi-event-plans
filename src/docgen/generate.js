@@ -26,7 +26,13 @@ function assetPath(path) {
 
 export async function generateSelectedDocuments(event, toggledModules) {
   const masterLogo = await loadImageBuffer(IMPI.masterLogoPath);
-  const eventLogo = event.eventLogo instanceof Blob ? await loadImageBuffer(event.eventLogo) : null;
+  // eventLogo is stored as a base64 data URL string (see FieldInput.jsx) so it
+  // survives IndexedDB round-trips safely; loadImageBuffer handles that format
+  // directly. Still accept a raw Blob too, for any old in-memory state.
+  const eventLogo =
+    event.eventLogo && (typeof event.eventLogo === "string" || event.eventLogo instanceof Blob)
+      ? await loadImageBuffer(event.eventLogo)
+      : null;
 
   // Reference signage / diagrams, sourced from IMPI's own compiled plans.
   const signage = {
