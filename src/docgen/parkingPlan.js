@@ -121,7 +121,8 @@ export async function buildParkingManagementPlan(event, images) {
 
     ...complianceDeclaration(
       `This Parking Management Plan has been compiled in accordance with SASREA, PSIRA and ${event.municipality || "municipal"} JOC requirements. All reasonable measures have been implemented to ensure safe vehicle and pedestrian management.`,
-      ["Security Manager", "Event Safety Officer"]
+      ["Security Manager", "Event Safety Officer"],
+      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
     ),
   ];
 

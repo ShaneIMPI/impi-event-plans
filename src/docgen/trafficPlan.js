@@ -106,7 +106,8 @@ export async function buildTrafficManagementPlan(event, images) {
 
     ...complianceDeclaration(
       `This Traffic Management Plan has been compiled in accordance with the National Road Traffic Act, SASREA, and ${event.municipality || "municipal"} JOC requirements. All reasonable measures have been implemented to ensure safe traffic flow and emergency access throughout the event.`,
-      ["Security Manager", "Event Safety Officer"]
+      ["Security Manager", "Event Safety Officer"],
+      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
     ),
   ];
 

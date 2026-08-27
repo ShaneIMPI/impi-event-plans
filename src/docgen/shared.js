@@ -388,12 +388,32 @@ export function emptyFooter() {
   return new Footer({ children: [] });
 }
 
-export function complianceDeclaration(text, signOffLines) {
+// Reads width/height straight from a PNG's IHDR chunk — used so embedded
+// signatures (which vary in aspect ratio) can be sized proportionally
+// instead of being stretched to a fixed box.
+export function getPngDimensions(buffer) {
+  const view = new DataView(buffer.buffer, buffer.byteOffset || 0, buffer.byteLength);
+  return { width: view.getUint32(16, false), height: view.getUint32(20, false) };
+}
+
+export function signatureImageRun(buffer, targetWidth = 150) {
+  const { width, height } = getPngDimensions(buffer);
+  const ratio = width && height ? height / width : 0.32;
+  return new ImageRun({ data: buffer, transformation: { width: targetWidth, height: Math.round(targetWidth * ratio) } });
+}
+
+export function complianceDeclaration(text, signOffLines, opts = {}) {
+  const { signatureBuffer, date } = opts;
   const nodes = [heading1("Final Compliance Declaration"), paragraph(text)];
   for (const label of signOffLines) {
+    nodes.push(new Paragraph({ spacing: { before: 220, after: 20 }, children: [bodyRun(`${label}:`, { bold: true })] }));
+    if (signatureBuffer) {
+      nodes.push(new Paragraph({ spacing: { after: 20 }, children: [signatureImageRun(signatureBuffer)] }));
+    } else {
+      nodes.push(new Paragraph({ spacing: { after: 20 }, children: [bodyRun("___________________________")] }));
+    }
     nodes.push(
-      new Paragraph({ spacing: { before: 200 }, children: [bodyRun(`${label}:`, { bold: true }), bodyRun("\t___________________________")] }),
-      new Paragraph({ spacing: { after: 120 }, children: [bodyRun("Date:", { bold: true }), bodyRun("\t___________________________")] })
+      new Paragraph({ spacing: { after: 120 }, children: [bodyRun("Date:", { bold: true }), bodyRun(`  ${date || "___________________________"}`)] })
     );
   }
   return nodes;

@@ -14,6 +14,7 @@ import {
   VerticalAlign,
 } from "docx";
 import { IMPI } from "../data/companyInfo.js";
+import { signatureImageRun } from "./shared.js";
 
 // This letter uses its own distinct visual style (matching the approved
 // template Shane supplied) — a simple navy-blue letterhead, not the red/gold
@@ -46,11 +47,20 @@ function subheading(text) {
   });
 }
 
-function signatureLine(label) {
-  return new Paragraph({
-    spacing: { after: 160 },
-    children: [run(`${label}: `), run("______________________________")],
-  });
+function signatureLine(label, opts = {}) {
+  const { value, signatureBuffer } = opts;
+  if (signatureBuffer) {
+    return [
+      new Paragraph({ spacing: { after: 20 }, children: [run(`${label}: `)] }),
+      new Paragraph({ spacing: { after: 160 }, children: [signatureImageRun(signatureBuffer)] }),
+    ];
+  }
+  return [
+    new Paragraph({
+      spacing: { after: 160 },
+      children: [run(`${label}: `), run(value || "______________________________")],
+    }),
+  ];
 }
 
 function buildLetterHeader() {
@@ -191,10 +201,10 @@ export async function buildSafetyOfficerAppointmentLetter(event, images) {
     ),
     bodyPara("For and on behalf of the Event Organiser", { after: 220 }),
 
-    signatureLine("Name"),
-    signatureLine("Designation"),
-    signatureLine("Signature"),
-    signatureLine("Date"),
+    ...signatureLine("Name"),
+    ...signatureLine("Designation"),
+    ...signatureLine("Signature"),
+    ...signatureLine("Date"),
 
     subheading("Acknowledgement by Safety Officer"),
     bodyPara(
@@ -202,9 +212,9 @@ export async function buildSafetyOfficerAppointmentLetter(event, images) {
       { after: 220 }
     ),
 
-    signatureLine("Name"),
-    signatureLine("Signature"),
-    signatureLine("Date"),
+    ...signatureLine("Name", { value: event.safetyOfficerName }),
+    ...signatureLine("Signature", { signatureBuffer: images.safetyOfficerSignature }),
+    ...signatureLine("Date", { value: event.datePrepared }),
   ];
 
   return new Document({

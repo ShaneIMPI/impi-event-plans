@@ -156,7 +156,8 @@ export async function buildSafetyManagementPlan(event, images) {
 
     ...complianceDeclaration(
       "This Safety Management Plan has been compiled in accordance with SASREA, the Occupational Health and Safety Act, and municipal JOC requirements. All reasonable measures have been implemented to ensure safety throughout the event life cycle.",
-      ["Event Safety Officer"]
+      ["Event Safety Officer"],
+      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
     ),
   ];
 

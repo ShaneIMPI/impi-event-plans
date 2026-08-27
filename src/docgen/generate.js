@@ -9,6 +9,8 @@ import { buildTrafficManagementPlan } from "./trafficPlan.js";
 import { buildEmergencyEvacuationPlan } from "./evacuationPlan.js";
 import { buildSafetyOfficerAppointmentLetter } from "./appointmentLetter.js";
 import { IMPI } from "../data/companyInfo.js";
+import { lookupSignatureAsset } from "../data/signatureLibrary.js";
+import { generateSignatureDataUrl } from "./signatureGen.js";
 
 function slugify(text) {
   return (text || "event")
@@ -20,8 +22,26 @@ function slugify(text) {
 // Resolves a public-asset path against the deployed site's base URL, so it
 // works whether served at the domain root (local dev) or under a subpath
 // like /impi-event-plans/ (GitHub Pages project sites).
-function assetPath(path) {
+export function assetPath(path) {
   return `${import.meta.env?.BASE_URL || "/"}${path.replace(/^\//, "")}`;
+}
+
+// Resolves a person's name to a signature image buffer: a real signature
+// from the library if we have one on file, otherwise a generated
+// approximation. Returns null if no name was given.
+async function resolveSignature(name) {
+  if (!name || !name.trim()) return null;
+  const assetFile = lookupSignatureAsset(name);
+  if (assetFile) {
+    return await loadImageBuffer(assetPath(`assets/signatures/${assetFile}`));
+  }
+  try {
+    const dataUrl = await generateSignatureDataUrl(name.trim());
+    return await loadImageBuffer(dataUrl);
+  } catch (err) {
+    console.warn("Signature generation failed for", name, err);
+    return null;
+  }
 }
 
 export async function generateSelectedDocuments(event, toggledModules) {
@@ -44,6 +64,16 @@ export async function generateSelectedDocuments(event, toggledModules) {
   };
 
   const images = { masterLogo, eventLogo, signage };
+
+  // Resolve once per generation run: the document preparer's signature signs
+  // every "Security Manager / Event Safety Officer / Risk Assessor" block
+  // across the six plan documents, and the Safety Officer's own signature
+  // (if that module is toggled) signs their acknowledgement on the
+  // Appointment Letter.
+  images.preparerSignature = await resolveSignature(event.preparedBy);
+  images.safetyOfficerSignature = toggledModules.includes("appointmentLetter")
+    ? await resolveSignature(event.safetyOfficerName)
+    : null;
 
   const jobs = [];
   if (toggledModules.includes("safety")) {

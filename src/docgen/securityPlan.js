@@ -129,7 +129,8 @@ export async function buildSecurityManagementPlan(event, images) {
 
     ...complianceDeclaration(
       "This Security Management Plan has been compiled in accordance with the South African Safety at Sports and Recreational Events Act (SASREA), the Private Security Industry Regulation Act (PSIRA), the Occupational Health and Safety Act, and the requirements of the relevant Joint Operations Committee (JOC). All reasonable measures have been implemented to ensure the safety and security of patrons, staff, and stakeholders.",
-      ["Security Manager", "Event Safety Officer"]
+      ["Security Manager", "Event Safety Officer"],
+      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
     ),
   ];
 

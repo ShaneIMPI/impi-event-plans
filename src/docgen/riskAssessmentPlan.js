@@ -374,7 +374,8 @@ export async function buildEventRiskAssessment(event, images) {
 
     ...complianceDeclaration(
       "This Event Risk Assessment has been compiled in accordance with the South African Safety at Sports and Recreational Events Act (SASREA), the Occupational Health and Safety Act, and applicable municipal JOC/ESSPC requirements. All reasonable measures have been implemented to reduce risk to as low as reasonably practicable for the event described in Section 1.",
-      ["Risk Assessor", "Event Safety Officer"]
+      ["Risk Assessor", "Event Safety Officer"],
+      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
     ),
   ];
 
