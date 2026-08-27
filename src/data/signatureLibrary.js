@@ -16,17 +16,19 @@
 // public/assets/signatures/sig_<slug>.png, and add an entry below with their
 // name exactly as it's typically typed into the questionnaire.
 //
-// NOTE: designations below are only filled in where Shane gave them
-// explicitly (Shane, Jacques). The rest are placeholders — update these with
-// the correct titles.
+// NOTE on designations: Steven Bruce and Annette Van Vuuren are left blank
+// intentionally — both only ever sign as the appointed Safety Officer (a
+// junior appointee role), never as the person doing the appointing, so no
+// separate management designation applies to them. Eldon de Jager has been
+// removed entirely — he's an engineer only and doesn't sign safety/security
+// documents at all.
 export const SIGNATURE_LIBRARY = {
   "shane steynfaardt": { file: "sig_shane-steynfaardt.png", designation: "Senior Operations Manager" },
   "jacques van vuuren": { file: "sig_jacques-van-vuuren.png", designation: "HOD: Events & Operations" },
   "annette van vuuren": { file: "sig_annette-van-vuuren.png", designation: "" },
   "steven bruce": { file: "sig_steven-bruce.png", designation: "" },
   "leon smit": { file: "sig_leon-smit.png", designation: "" },
-  "jaco van dyk": { file: "sig_jaco-van-dyk.png", designation: "" },
-  "eldon de jager": { file: "sig_eldon-de-jager.png", designation: "" },
+  "jaco van dyk": { file: "sig_jaco-van-dyk.png", designation: "Managing Director" },
 };
 
 export function normalizeName(name) {
