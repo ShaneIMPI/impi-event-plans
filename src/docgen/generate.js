@@ -9,7 +9,7 @@ import { buildTrafficManagementPlan } from "./trafficPlan.js";
 import { buildEmergencyEvacuationPlan } from "./evacuationPlan.js";
 import { buildSafetyOfficerAppointmentLetter } from "./appointmentLetter.js";
 import { IMPI } from "../data/companyInfo.js";
-import { lookupSignatureAsset } from "../data/signatureLibrary.js";
+import { lookupSignatureAsset, lookupDesignation } from "../data/signatureLibrary.js";
 import { generateSignatureDataUrl } from "./signatureGen.js";
 
 function slugify(text) {
@@ -26,21 +26,25 @@ export function assetPath(path) {
   return `${import.meta.env?.BASE_URL || "/"}${path.replace(/^\//, "")}`;
 }
 
-// Resolves a person's name to a signature image buffer: a real signature
-// from the library if we have one on file, otherwise a generated
-// approximation. Returns null if no name was given.
-async function resolveSignature(name) {
-  if (!name || !name.trim()) return null;
+// Resolves a person's name to { signatureBuffer, designation }: a real
+// signature (and stored title) from the library if we have one on file,
+// otherwise a generated signature approximation and no designation. Returns
+// nulls if no name was given.
+async function resolveSigner(name) {
+  if (!name || !name.trim()) return { signatureBuffer: null, designation: "" };
   const assetFile = lookupSignatureAsset(name);
   if (assetFile) {
-    return await loadImageBuffer(assetPath(`assets/signatures/${assetFile}`));
+    return {
+      signatureBuffer: await loadImageBuffer(assetPath(`assets/signatures/${assetFile}`)),
+      designation: lookupDesignation(name),
+    };
   }
   try {
     const dataUrl = await generateSignatureDataUrl(name.trim());
-    return await loadImageBuffer(dataUrl);
+    return { signatureBuffer: await loadImageBuffer(dataUrl), designation: "" };
   } catch (err) {
     console.warn("Signature generation failed for", name, err);
-    return null;
+    return { signatureBuffer: null, designation: "" };
   }
 }
 
@@ -65,14 +69,20 @@ export async function generateSelectedDocuments(event, toggledModules) {
 
   const images = { masterLogo, eventLogo, signage };
 
-  // Resolve once per generation run: the document preparer's signature signs
-  // every "Security Manager / Event Safety Officer / Risk Assessor" block
-  // across the six plan documents, and the Safety Officer's own signature
-  // (if that module is toggled) signs their acknowledgement on the
-  // Appointment Letter.
-  images.preparerSignature = await resolveSignature(event.preparedBy);
+  // Resolve once per generation run: each signing role gets its own name ->
+  // signature (+ designation, if known) lookup, so the Security Manager,
+  // Event Safety Officer, and Risk Assessor blocks are each signed by the
+  // actual person typed into that role's field — not all by one person.
+  images.roleSignatures = {
+    eventSafetyOfficer: await resolveSigner(event.eventSafetyOfficer),
+    securityManager: await resolveSigner(event.securityManagerName),
+    riskAssessor: await resolveSigner(event.riskAssessor),
+  };
+  images.organiserSigner = toggledModules.includes("appointmentLetter")
+    ? await resolveSigner(event.organiserSignerName)
+    : { signatureBuffer: null, designation: "" };
   images.safetyOfficerSignature = toggledModules.includes("appointmentLetter")
-    ? await resolveSignature(event.safetyOfficerName)
+    ? (await resolveSigner(event.safetyOfficerName)).signatureBuffer
     : null;
 
   const jobs = [];

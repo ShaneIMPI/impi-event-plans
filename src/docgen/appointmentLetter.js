@@ -201,9 +201,9 @@ export async function buildSafetyOfficerAppointmentLetter(event, images) {
     ),
     bodyPara("For and on behalf of the Event Organiser", { after: 220 }),
 
-    ...signatureLine("Name"),
-    ...signatureLine("Designation"),
-    ...signatureLine("Signature"),
+    ...signatureLine("Name", { value: event.organiserSignerName }),
+    ...signatureLine("Designation", { value: event.organiserSignerDesignation || images.organiserSigner.designation }),
+    ...signatureLine("Signature", { signatureBuffer: images.organiserSigner.signatureBuffer }),
     ...signatureLine("Date"),
 
     subheading("Acknowledgement by Safety Officer"),
@@ -214,7 +214,7 @@ export async function buildSafetyOfficerAppointmentLetter(event, images) {
 
     ...signatureLine("Name", { value: event.safetyOfficerName }),
     ...signatureLine("Signature", { signatureBuffer: images.safetyOfficerSignature }),
-    ...signatureLine("Date", { value: event.datePrepared }),
+    ...signatureLine("Date"),
   ];
 
   return new Document({

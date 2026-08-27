@@ -402,10 +402,9 @@ export function signatureImageRun(buffer, targetWidth = 150) {
   return new ImageRun({ data: buffer, transformation: { width: targetWidth, height: Math.round(targetWidth * ratio) } });
 }
 
-export function complianceDeclaration(text, signOffLines, opts = {}) {
-  const { signatureBuffer, date } = opts;
+export function complianceDeclaration(text, signOffEntries) {
   const nodes = [heading1("Final Compliance Declaration"), paragraph(text)];
-  for (const label of signOffLines) {
+  for (const { label, signatureBuffer, date } of signOffEntries) {
     nodes.push(new Paragraph({ spacing: { before: 220, after: 20 }, children: [bodyRun(`${label}:`, { bold: true })] }));
     if (signatureBuffer) {
       nodes.push(new Paragraph({ spacing: { after: 20 }, children: [signatureImageRun(signatureBuffer)] }));

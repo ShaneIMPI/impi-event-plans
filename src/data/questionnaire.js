@@ -28,6 +28,13 @@ export const CORE_FIELDS = [
 // when either (or both) are toggled on.
 export const SHARED_OPERATIONAL_FIELDS = [
   {
+    id: "securityManagerName",
+    label: "Security Manager (name)",
+    type: "text",
+    modules: ["security", "parking", "traffic", "evacuation"],
+    placeholder: "Person signing off as Security Manager on the compliance declaration",
+  },
+  {
     id: "medicalProvider",
     label: "Medical / EMS Service Provider",
     type: "text",
@@ -69,6 +76,8 @@ export const EVACUATION_FIELDS = [
 ];
 
 export const APPOINTMENT_LETTER_FIELDS = [
+  { id: "organiserSignerName", label: "Appointing on behalf of the Event Organiser (name)", type: "text", modules: ["appointmentLetter"], placeholder: "Who is signing to appoint the Safety Officer — often you" },
+  { id: "organiserSignerDesignation", label: "Their Designation (leave blank to use their saved title, if known)", type: "text", modules: ["appointmentLetter"] },
   { id: "safetyOfficerName", label: "Safety Officer — Full Name", type: "text", modules: ["appointmentLetter"], placeholder: "e.g. Annette Van Vuuren" },
   { id: "safetyOfficerIdNumber", label: "Safety Officer — ID Number", type: "text", modules: ["appointmentLetter"] },
   { id: "safetyOfficerPosition", label: "Safety Officer — Position / Grading", type: "text", modules: ["appointmentLetter"], default: "Safety Officer" },

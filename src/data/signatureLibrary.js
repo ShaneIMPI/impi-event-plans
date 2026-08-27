@@ -7,18 +7,26 @@
 // people still get *something*, but anyone added here gets their real
 // signature, which will always look better than a generated one.
 //
+// Each entry also carries a `designation` — when a name matches, that title
+// auto-fills anywhere a document asks for the signer's designation (e.g. the
+// Appointment Letter's "Designation:" line), alongside the signature itself.
+//
 // To add someone new: get a clean image of their signature (cropped tightly,
 // transparent or white background), save it as
 // public/assets/signatures/sig_<slug>.png, and add an entry below with their
 // name exactly as it's typically typed into the questionnaire.
+//
+// NOTE: designations below are only filled in where Shane gave them
+// explicitly (Shane, Jacques). The rest are placeholders — update these with
+// the correct titles.
 export const SIGNATURE_LIBRARY = {
-  "shane steynfaardt": "sig_shane-steynfaardt.png",
-  "jacques van vuuren": "sig_jacques-van-vuuren.png",
-  "annette van vuuren": "sig_annette-van-vuuren.png",
-  "steven bruce": "sig_steven-bruce.png",
-  "leon smit": "sig_leon-smit.png",
-  "jaco van dyk": "sig_jaco-van-dyk.png",
-  "eldon de jager": "sig_eldon-de-jager.png",
+  "shane steynfaardt": { file: "sig_shane-steynfaardt.png", designation: "Senior Operations Manager" },
+  "jacques van vuuren": { file: "sig_jacques-van-vuuren.png", designation: "HOD: Events & Operations" },
+  "annette van vuuren": { file: "sig_annette-van-vuuren.png", designation: "" },
+  "steven bruce": { file: "sig_steven-bruce.png", designation: "" },
+  "leon smit": { file: "sig_leon-smit.png", designation: "" },
+  "jaco van dyk": { file: "sig_jaco-van-dyk.png", designation: "" },
+  "eldon de jager": { file: "sig_eldon-de-jager.png", designation: "" },
 };
 
 export function normalizeName(name) {
@@ -28,6 +36,12 @@ export function normalizeName(name) {
 // Returns the asset filename if this person has a real signature on file,
 // or null if we don't have one (caller should fall back to generation).
 export function lookupSignatureAsset(name) {
-  const key = normalizeName(name);
-  return SIGNATURE_LIBRARY[key] || null;
+  const entry = SIGNATURE_LIBRARY[normalizeName(name)];
+  return entry ? entry.file : null;
+}
+
+// Returns their stored designation/title, or "" if unknown.
+export function lookupDesignation(name) {
+  const entry = SIGNATURE_LIBRARY[normalizeName(name)];
+  return entry?.designation || "";
 }

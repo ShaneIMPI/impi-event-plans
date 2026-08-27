@@ -126,8 +126,7 @@ export async function buildEmergencyEvacuationPlan(event, images) {
 
     ...complianceDeclaration(
       "This Emergency Evacuation Plan has been compiled in accordance with SASREA, the Occupational Health and Safety Act, and applicable municipal JOC requirements. All reasonable measures have been implemented to ensure the safe evacuation of patrons, staff, and stakeholders in an emergency.",
-      ["Event Safety Officer", "Security Manager"],
-      { signatureBuffer: images.preparerSignature, date: event.datePrepared }
+      [{ label: "Event Safety Officer", signatureBuffer: images.roleSignatures.eventSafetyOfficer.signatureBuffer, date: event.datePrepared }, { label: "Security Manager", signatureBuffer: images.roleSignatures.securityManager.signatureBuffer, date: event.datePrepared }]
     ),
   ];
 
