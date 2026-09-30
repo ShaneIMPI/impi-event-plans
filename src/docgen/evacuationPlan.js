@@ -26,6 +26,7 @@ export async function buildEmergencyEvacuationPlan(event, images) {
     docTitle: "EMERGENCY EVACUATION PLAN",
     subTitle: "(SASREA & OHS Act Compliant)",
     eventLogoBuffer: images.eventLogo,
+    eventLogoDims: images.eventLogoDims,
     masterLogoBuffer: images.masterLogo,
     event,
   });

@@ -19,6 +19,7 @@ export async function buildSafetyManagementPlan(event, images) {
     docTitle: "SAFETY MANAGEMENT PLAN",
     subTitle: "(SASREA & OHS Act Compliant)",
     eventLogoBuffer: images.eventLogo,
+    eventLogoDims: images.eventLogoDims,
     masterLogoBuffer: images.masterLogo,
     event,
   });

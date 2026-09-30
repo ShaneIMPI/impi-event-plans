@@ -26,6 +26,7 @@ export async function buildTrafficManagementPlan(event, images) {
     docTitle: "TRAFFIC MANAGEMENT PLAN",
     subTitle: "(SASREA & National Road Traffic Act Compliant)",
     eventLogoBuffer: images.eventLogo,
+    eventLogoDims: images.eventLogoDims,
     masterLogoBuffer: images.masterLogo,
     event,
   });

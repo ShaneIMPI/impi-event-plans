@@ -26,6 +26,26 @@ export function assetPath(path) {
   return `${import.meta.env?.BASE_URL || "/"}${path.replace(/^\//, "")}`;
 }
 
+// Reads an image's true pixel dimensions (any format the browser can
+// decode — PNG, JPEG, etc.), so the cover page can size an uploaded event
+// logo proportionally instead of stretching it into a fixed box.
+function getImageNaturalSize(source) {
+  if (typeof document === "undefined") return Promise.resolve(null);
+  const url = typeof source === "string" ? source : URL.createObjectURL(source);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      if (typeof source !== "string") URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      resolve(null);
+      if (typeof source !== "string") URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
 // Resolves a person's name to { signatureBuffer, designation }: a real
 // signature (and stored title) from the library if we have one on file,
 // otherwise a generated signature approximation and no designation. Returns
@@ -53,10 +73,9 @@ export async function generateSelectedDocuments(event, toggledModules) {
   // eventLogo is stored as a base64 data URL string (see FieldInput.jsx) so it
   // survives IndexedDB round-trips safely; loadImageBuffer handles that format
   // directly. Still accept a raw Blob too, for any old in-memory state.
-  const eventLogo =
-    event.eventLogo && (typeof event.eventLogo === "string" || event.eventLogo instanceof Blob)
-      ? await loadImageBuffer(event.eventLogo)
-      : null;
+  const hasEventLogo = event.eventLogo && (typeof event.eventLogo === "string" || event.eventLogo instanceof Blob);
+  const eventLogo = hasEventLogo ? await loadImageBuffer(event.eventLogo) : null;
+  const eventLogoDims = hasEventLogo ? await getImageNaturalSize(event.eventLogo) : null;
 
   // Reference signage / diagrams, sourced from IMPI's own compiled plans.
   const signage = {
@@ -67,7 +86,7 @@ export async function generateSelectedDocuments(event, toggledModules) {
     assemblyPointSign: await loadImageBuffer(assetPath("assets/signage/assembly-point-sign.png")),
   };
 
-  const images = { masterLogo, eventLogo, signage };
+  const images = { masterLogo, eventLogo, eventLogoDims, signage };
 
   // Resolve once per generation run: each signing role gets its own name ->
   // signature (+ designation, if known) lookup, so the Security Manager,

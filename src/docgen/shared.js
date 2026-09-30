@@ -73,29 +73,56 @@ export function bodyRun(text, opts = {}) {
 
 // ---- Cover page: centred master logo, centred title/subtitle, red rule,
 // plain document-detail table. Matches the approved IMPI master templates. ----
-export async function buildCoverPage({ docTitle, subTitle, eventLogoBuffer, masterLogoBuffer, event, extraDetailRows = [] }) {
+// Fits a source image within a bounding box, preserving its true aspect
+// ratio (like CSS object-fit: contain) — so a tall poster shrinks to fit the
+// box's height instead of being stretched to a fixed landscape shape.
+function fitWithinBox(naturalDims, maxWidth, maxHeight) {
+  if (!naturalDims || !naturalDims.width || !naturalDims.height) {
+    return { width: maxWidth, height: maxHeight };
+  }
+  const ratio = naturalDims.width / naturalDims.height;
+  const boxRatio = maxWidth / maxHeight;
+  if (ratio >= boxRatio) {
+    return { width: maxWidth, height: Math.round(maxWidth / ratio) };
+  }
+  return { width: Math.round(maxHeight * ratio), height: maxHeight };
+}
+
+export async function buildCoverPage({
+  docTitle,
+  subTitle,
+  eventLogoBuffer,
+  eventLogoDims,
+  masterLogoBuffer,
+  event,
+  extraDetailRows = [],
+}) {
   const children = [];
 
-  // Logo — centred, generous size
+  // IMPI master logo — centred, moderate size (true aspect ratio ~1.98:1,
+  // so no distortion here regardless of size chosen)
   children.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 320 },
+      spacing: { after: eventLogoBuffer ? 200 : 320 },
       children: [
         masterLogoBuffer
-          ? new ImageRun({ data: masterLogoBuffer, transformation: { width: 400, height: 203 } })
+          ? new ImageRun({ data: masterLogoBuffer, transformation: { width: 320, height: 162 } })
           : new TextRun({ text: "IMPI RMS (Pty) Ltd", bold: true, size: 28, color: DARK, font: "Calibri" }),
       ],
     })
   );
 
-  // Event logo, if supplied — centred, smaller, beneath the master logo
+  // Event logo, if supplied — centred, fitted proportionally within a
+  // generous box so posters of any shape (tall, wide, square) sit cleanly
+  // without being cropped or stretched to fill a fixed box.
   if (eventLogoBuffer) {
+    const { width, height } = fitWithinBox(eventLogoDims, 260, 300);
     children.push(
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 320 },
-        children: [new ImageRun({ data: eventLogoBuffer, transformation: { width: 220, height: 136 } })],
+        spacing: { before: 80, after: 340 },
+        children: [new ImageRun({ data: eventLogoBuffer, transformation: { width, height } })],
       })
     );
   }

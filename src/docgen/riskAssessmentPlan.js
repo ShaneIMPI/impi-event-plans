@@ -173,6 +173,7 @@ export async function buildEventRiskAssessment(event, images) {
     docTitle: "EVENT RISK ASSESSMENT",
     subTitle: "(SASREA Compliant)",
     eventLogoBuffer: images.eventLogo,
+    eventLogoDims: images.eventLogoDims,
     masterLogoBuffer: images.masterLogo,
     event,
     extraDetailRows: [["Event Type", event.raEventType || "TBC"]],

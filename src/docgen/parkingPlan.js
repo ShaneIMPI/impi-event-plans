@@ -26,6 +26,7 @@ export async function buildParkingManagementPlan(event, images) {
     docTitle: "PARKING MANAGEMENT PLAN",
     subTitle: "(SASREA & PSIRA Compliant)",
     eventLogoBuffer: images.eventLogo,
+    eventLogoDims: images.eventLogoDims,
     masterLogoBuffer: images.masterLogo,
     event,
   });
